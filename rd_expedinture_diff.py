@@ -11,6 +11,7 @@ from scipy.stats import shapiro
 from scikit_posthocs import posthoc_dunn
 from pingouin import kruskal, qqplot, pairwise_tests, mwu, wilcoxon
 import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 def set_sns_theme() -> None:
@@ -65,54 +66,52 @@ if __name__ == "__main__":
     suppres_scientific_notation()
     df = load_data(path = "data/expenditure_csv.csv", sep = ";")
     df = df.fillna(value = np.nan)
+    
+    #H0: rozkład jest istotnie podobny do normalnego
+    #H1: rozkład jest istotnie różny od normalnego
     sw = shapiro_wilk_test(data_frame = df[~np.isnan(df['Government'])], feature = columns)
     if sw:
         print('Brak podstaw do odrzucenia H0. Rozkład istotnie zblizony do normalnego.')
     else:
         print('Odrzucamy H0. Rozkład istotnie różny od normalnego.')
-        plot_qqplot(data_frame = df, feature = columns)
-        kw = kw_test(data_frame = df, feature = columns, groups = 'LOCATION')
-        if kw['p-unc'].values < 0.05:
-            """
-            parametric boolean
-            If True (default), use the parametric ttest() function. 
-            If False, use pingouin.wilcoxon() or pingouin.mwu() for paired 
-            or unpaired samples, respectively.
-            """
+    plot_qqplot(data_frame = df, feature = columns)
     
-            #dunn = kw_post_hoc(data_frame = df, feature = columns, groups = 'LOCATION')
-            posthoc = pairwise_tests(dv = columns
-                                     , between = "LOCATION"
-                                     , data = df
-                                     , parametric = False
-                                     , padjust = "holm").round(3)
-            significant = posthoc[posthoc["p-corr"] < 0.05]
-            insignificant = posthoc[posthoc["p-corr"] >= 0.05]
-
-#%%
-#H0: Polska nie różni się pod kątem sredniej z sektora prywatnego i rządowego
-#H1: Polska różni się pod katem sredniej z sektora prywatnego i rzadowego
-df_pol = df[~np.isnan(df['Government']) & ~np.isnan(df['Business enterprise'])]
-df_pol = df_pol[df_pol['LOCATION'] == 'POL']
-
-sw_pol_gov = shapiro_wilk_test(data_frame = df_pol, feature = 'Government')
-sw_pol_bse = shapiro_wilk_test(data_frame = df_pol, feature = 'Business enterprise')
-
-plot_qqplot(data_frame = df_pol, feature = 'Government')
-plot_qqplot(data_frame = df_pol, feature = 'Business enterprise')
-
-sw = shapiro(df_pol['Business enterprise'])
-
-pol_mwu = mwu(df_pol['Government'], df_pol['Business enterprise'])
-pol_wilcoxon = wilcoxon(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
+    #H0: badane kraje róznia sie pod wzgledem wydatkow z sektora rzadowego na r&d
+    #H1: badane kraje nie róznia sie pod wzgledem wydatkow z sektora rzadowego na r&d    
+    kw = kw_test(data_frame = df, feature = columns, groups = 'LOCATION')
+    if kw['p-unc'].values < 0.05:
+        """
+        parametric boolean
+        If True (default), use the parametric ttest() function. 
+        If False, use pingouin.wilcoxon() or pingouin.mwu() for paired 
+        or unpaired samples, respectively.
+        """
+        
+        
+        posthoc = pairwise_tests(dv = columns
+                                 , between = "LOCATION"
+                                 , data = df
+                                 , parametric = False
+                                 , padjust = "holm").round(3)
+        significant = posthoc[posthoc["p-corr"] < 0.05]
+        insignificant = posthoc[posthoc["p-corr"] >= 0.05]
 
 
-round(df_pol['Government'], 2).hist()
-df_pol['Business enterprise'].hist()
+    df_pol = df[~np.isnan(df['Government']) & ~np.isnan(df['Business enterprise'])]
+    df_pol = df_pol[df_pol['LOCATION'] == 'POL']
+    sw_pol_gov = shapiro_wilk_test(data_frame = df_pol, feature = 'Government')
+    sw_pol_bse = shapiro_wilk_test(data_frame = df_pol, feature = 'Business enterprise')
+    plot_qqplot(data_frame = df_pol, feature = 'Government')
+    plot_qqplot(data_frame = df_pol, feature = 'Business enterprise')
+    sw = shapiro(df_pol['Business enterprise'])
+    
+    #H0: Polska nie różni się pod kątem wydatkow z sektora prywatnego i rządowego
+    #H1: Polska różni się pod katem wydatkow z sektora prywatnego i rzadowego
+    pol_expedinture_mwu = mwu(df_pol['Government'], df_pol['Business enterprise'])
+    pol_expedinture_wilcoxon = wilcoxon(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
 
-#%%
-#H0: wydatki w Polsce sa takie same w sektorze rzadowym i prywatnym
-#H1: wydatki w Polsce są wieksze w sektorze rzadowym niz prywatnym
 
-pol_mwu = mwu(df_pol['kGovernment'], df_pol['Business enterprise'], alternative = 'greater')
-pol_wilcoxon = wilcoxon(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
+    #H0: wydatki w Polsce sa takie same w sektorze rzadowym i prywatnym
+    #H1: wydatki w Polsce są wieksze w sektorze rzadowym niz prywatnym
+    pol_expedinture_mw = mwu(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
+    pol_expedinture_wx = wilcoxon(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
