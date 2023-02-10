@@ -60,6 +60,22 @@ def kw_post_hoc(data_frame: pd.DataFrame
     return dunn
 
 
+def mann_whitney_u_test(x: pd.Series, y: pd.Series, alternative: str = None) -> pd.DataFrame:
+    if alternative:
+        stat = mwu(x, y, alternative)
+    else:
+        stat = mwu(x, y)
+    return stat
+
+
+def wilcoxon_test(x: pd.Series, y: pd.Series, alternative: str) -> pd.DataFrame:
+    if alternative:
+        stat = wilcoxon(x, y, alternative)
+    else:
+        stat = wilcoxon(x, y)
+    return stat
+
+
 if __name__ == "__main__":
     columns = "Government"
     set_sns_theme()
@@ -86,16 +102,12 @@ if __name__ == "__main__":
         If False, use pingouin.wilcoxon() or pingouin.mwu() for paired 
         or unpaired samples, respectively.
         """
-        
-        
+        # test post-hoc parami wilcoxona
         posthoc = pairwise_tests(dv = columns
                                  , between = "LOCATION"
                                  , data = df
                                  , parametric = False
                                  , padjust = "holm").round(3)
-        significant = posthoc[posthoc["p-corr"] < 0.05]
-        insignificant = posthoc[posthoc["p-corr"] >= 0.05]
-
 
     df_pol = df[~np.isnan(df['Government']) & ~np.isnan(df['Business enterprise'])]
     df_pol = df_pol[df_pol['LOCATION'] == 'POL']
@@ -107,11 +119,11 @@ if __name__ == "__main__":
     
     #H0: Polska nie różni się pod kątem wydatkow z sektora prywatnego i rządowego
     #H1: Polska różni się pod katem wydatkow z sektora prywatnego i rzadowego
-    pol_expedinture_mwu = mwu(df_pol['Government'], df_pol['Business enterprise'])
-    pol_expedinture_wilcoxon = wilcoxon(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
+    pol_expedinture_mwu = mann_whitney_u_test(df_pol['Government'], df_pol['Business enterprise'])
+    pol_expedinture_wilcoxon = wilcoxon_test(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
 
 
     #H0: wydatki w Polsce sa takie same w sektorze rzadowym i prywatnym
     #H1: wydatki w Polsce są wieksze w sektorze rzadowym niz prywatnym
-    pol_expedinture_mw = mwu(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
-    pol_expedinture_wx = wilcoxon(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
+    pol_expedinture_mw = mann_whitney_u_test(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
+    pol_expedinture_wx = wilcoxon_test(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
