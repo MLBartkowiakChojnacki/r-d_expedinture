@@ -92,8 +92,8 @@ if __name__ == "__main__":
         print('Odrzucamy H0. Rozkład istotnie różny od normalnego.')
     plot_qqplot(data_frame = df, feature = columns)
     
-    #H0: badane kraje róznia sie pod wzgledem wydatkow z sektora rzadowego na r&d
-    #H1: badane kraje nie róznia sie pod wzgledem wydatkow z sektora rzadowego na r&d    
+    #H0: badane kraje nie róznia sie pod wzgledem wydatkow z sektora rzadowego na r&d
+    #H1: badane kraje róznia sie pod wzgledem wydatkow z sektora rzadowego na r&d    
     kw = kw_test(data_frame = df, feature = columns, groups = 'LOCATION')
     if kw['p-unc'].values < 0.05:
         """
@@ -116,14 +116,13 @@ if __name__ == "__main__":
     plot_qqplot(data_frame = df_pol, feature = 'Government')
     plot_qqplot(data_frame = df_pol, feature = 'Business enterprise')
     sw = shapiro(df_pol['Business enterprise'])
+    sw = shapiro(df_pol['Government'])
     
     #H0: Polska nie różni się pod kątem wydatkow z sektora prywatnego i rządowego
     #H1: Polska różni się pod katem wydatkow z sektora prywatnego i rzadowego
     pol_expedinture_mwu = mann_whitney_u_test(df_pol['Government'], df_pol['Business enterprise'])
-    pol_expedinture_wilcoxon = wilcoxon_test(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
 
 
     #H0: wydatki w Polsce sa takie same w sektorze rzadowym i prywatnym
     #H1: wydatki w Polsce są wieksze w sektorze rzadowym niz prywatnym
     pol_expedinture_mw = mann_whitney_u_test(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
-    pol_expedinture_wx = wilcoxon_test(df_pol['Government'], df_pol['Business enterprise'], alternative = 'greater')
