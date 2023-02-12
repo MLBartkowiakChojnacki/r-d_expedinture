@@ -89,7 +89,7 @@ def draw_histograms(df: pd.DataFrame, variables: pd.Series, n_rows: int, n_cols:
 
 
 def draw_plots(df: pd.DataFrame, variables: pd.Series, n_rows: int, n_cols: int, group: str):
-    if group == None:
+    if group is None:
         fig = plt.figure(figsize=(10, 10))
         for i, var_name in enumerate(variables):
             ax=fig.add_subplot(n_rows,n_cols,i+1)
