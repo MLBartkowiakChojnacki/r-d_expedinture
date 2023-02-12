@@ -76,14 +76,25 @@ def wilcoxon_test(x: pd.Series, y: pd.Series, alternative: str) -> pd.DataFrame:
     return stat
 
 
-def draw_histograms(df, variables, n_rows, n_cols):
+def draw_histograms(df: pd.DataFrame, variables: pd.Series, n_rows: int, n_cols: int):
     fig=plt.figure(figsize=(10, 10))
     for i, var_name in enumerate(variables):
         ax=fig.add_subplot(n_rows,n_cols,i+1)
         df[var_name].hist(bins=10,ax=ax)
         ax.set_title(var_name+" Distribution")
-    fig.tight_layout()  # Improves appearance a bit.
+    fig.tight_layout()
     plt.show()
+
+
+def draw_plots(df: pd.DataFrame, variables: pd.Series, n_rows: int, n_cols: int, group: str):
+    for country in group:
+        fig = plt.figure(figsize=(10, 10))
+        for i, var_name in enumerate(variables):
+            ax=fig.add_subplot(n_rows,n_cols,i+1)
+            plt.bar(df[df['LOCATION'] == country]['TIME'].unique(), df[df['LOCATION'] == country][var_name])
+            ax.set_title(f'Location: {country} ' + var_name)
+        fig.tight_layout()
+        plt.show()  
 
 
 if __name__ == "__main__":
@@ -94,6 +105,7 @@ if __name__ == "__main__":
     df = df.fillna(value = np.nan)
     
     draw_histograms(df = df, variables = df.columns[3:], n_rows = 4, n_cols = 3)
+    draw_plots(df = df, variables = df.columns[3:], n_rows = 4, n_cols = 3, group = df['LOCATION'].unique())
     
     #H0: rozkład jest istotnie podobny do normalnego
     #H1: rozkład jest istotnie różny od normalnego
