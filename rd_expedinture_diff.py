@@ -12,6 +12,8 @@ from scikit_posthocs import posthoc_dunn
 from pingouin import kruskal, qqplot, pairwise_tests, mwu, wilcoxon
 import seaborn as sns
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib import dates
 
 
 def set_sns_theme() -> None:
@@ -87,14 +89,33 @@ def draw_histograms(df: pd.DataFrame, variables: pd.Series, n_rows: int, n_cols:
 
 
 def draw_plots(df: pd.DataFrame, variables: pd.Series, n_rows: int, n_cols: int, group: str):
-    for country in group:
+    if group == None:
         fig = plt.figure(figsize=(10, 10))
         for i, var_name in enumerate(variables):
             ax=fig.add_subplot(n_rows,n_cols,i+1)
-            plt.bar(df[df['LOCATION'] == country]['TIME'].unique(), df[df['LOCATION'] == country][var_name])
-            ax.set_title(f'Location: {country} ' + var_name)
+            try:
+                df_grouped.reset_index(inplace=True)
+            except ValueError:
+                pass
+            plt.bar(df_grouped['LOCATION'], df_grouped[var_name])
+            ax.set_title(var_name)
+            mf = mpl.ticker.ScalarFormatter(useMathText=True)
+            mf.set_powerlimits((-2,2))
+            plt.gca().yaxis.set_major_formatter(mf)
         fig.tight_layout()
         plt.show()  
+    else:
+        for country in group:
+            fig = plt.figure(figsize=(10, 10))
+            for i, var_name in enumerate(variables):
+                ax=fig.add_subplot(n_rows,n_cols,i+1)
+                plt.bar(df[df['LOCATION'] == country]['TIME'].unique(), df[df['LOCATION'] == country][var_name])
+                ax.set_title(f'Location: {country} ' + var_name)
+                mf = mpl.ticker.ScalarFormatter(useMathText=True)
+                mf.set_powerlimits((-2,2))
+                plt.gca().yaxis.set_major_formatter(mf)
+            fig.tight_layout()
+            plt.show()  
 
 
 if __name__ == "__main__":
@@ -103,10 +124,12 @@ if __name__ == "__main__":
     suppres_scientific_notation()
     df = load_data(path = "data/expenditure_csv.csv", sep = ";")
     df = df.fillna(value = np.nan)
+    df_grouped = df.groupby('LOCATION').mean().drop(columns = 'TIME')
     
     draw_histograms(df = df, variables = df.columns[3:], n_rows = 4, n_cols = 3)
     draw_plots(df = df, variables = df.columns[3:], n_rows = 4, n_cols = 3, group = df['LOCATION'].unique())
-    
+    draw_plots(df = df_grouped, variables = df_grouped[1:].columns, n_rows = 4, n_cols = 3, group = None)
+
     #H0: rozkład jest istotnie podobny do normalnego
     #H1: rozkład jest istotnie różny od normalnego
     sw = shapiro_wilk_test(data_frame = df[~np.isnan(df['Government'])], feature = columns)
